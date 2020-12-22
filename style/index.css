@@ -1,0 +1,10 @@
+.jupyterpads-widget {
+    flex-direction: column;
+    min-width: var(--jp-sidebar-min-width);
+    color: var(--jp-ui-font-color1);
+    background: var(--jp-layout-color1);
+    font-size: var(--jp-ui-font-size1);
+    overflow: auto;
+    height: 100%;
+    display: flex;
+}
