@@ -1,4 +1,4 @@
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
-import pypadsExtension from './widget';
+import jupyterpadsExtension from './widget';
 
-export default [pypadsExtension] as JupyterFrontEndPlugin<any>[];
+export default [jupyterpadsExtension] as JupyterFrontEndPlugin<any>[];

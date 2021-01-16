@@ -1,7 +1,32 @@
+import { Dialog, showDialog } from '@jupyterlab/apputils';
 import { NotebookPanel } from '@jupyterlab/notebook';
-import { KernelMessage, Kernel } from '@jupyterlab/services';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
+import * as React from 'react';
+import { ReactElement } from 'react';
+import SanitizedHTML from 'react-sanitized-html';
 
 export default class NotebookUtilities {
+  /**
+   * Opens a pop-up dialog in JupyterLab to display a simple message.
+   * @param title The title for the message popup
+   * @param msg The message as an array of strings
+   * @param buttonLabel The label to use for the button. Default is 'OK'
+   * @param buttonClassName The classname to give to the 'ok' button
+   * @returns Promise<void> - A promise once the message is closed.
+   */
+  public static async showMessage(
+    title: string,
+    msg: string[],
+    buttonLabel = 'Dismiss',
+    buttonClassName = ''
+  ): Promise<void> {
+    const buttons: ReadonlyArray<Dialog.IButton> = [
+      Dialog.okButton({ label: buttonLabel, className: buttonClassName })
+    ];
+    const messageBody = this.buildDialogBody(msg);
+    await showDialog({ title, buttons, body: messageBody });
+  }
+
   /**
    * @description This function runs code directly in the notebook's kernel and then evaluates the
    * result and returns it as a promise.
@@ -125,5 +150,30 @@ export default class NotebookUtilities {
     await notebookPanel.sessionContext.ready;
 
     await notebookPanel.sessionContext.session.kernel.restart();
+  }
+
+  /**
+   * Builds an HTML container by sanitizing a list of strings and converting
+   * them in valid HTML
+   * @param msg A list of string with HTML formatting
+   * @returns a HTMLDivElement composed of a list of spans with formatted text
+   */
+  private static buildDialogBody(msg: string[]): ReactElement {
+    return (
+      <div className="dialog-body">
+        {msg.map((s: string, i: number) => {
+          return (
+            <React.Fragment key={`msg-${i}`}>
+              <SanitizedHTML
+                allowedAttributes={{ a: ['href'] }}
+                allowedTags={['b', 'i', 'em', 'strong', 'a', 'pre']}
+                html={s}
+              />
+              <br />
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
   }
 }

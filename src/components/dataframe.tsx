@@ -9,7 +9,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
-import { createStyles, makeStyles, Theme } from '@material-ui/core';
+import { createStyles, makeStyles, Paper, Theme } from '@material-ui/core';
 
 interface IDataFrame {
   columns: string[];
@@ -22,76 +22,66 @@ const useStyles = makeStyles((theme: Theme) =>
     formControl: {
       margin: theme.spacing(1),
       minWidth: 120
-    },
-    selectEmpty: {
-      marginTop: theme.spacing(2)
     }
   })
 );
 
 export default function Dataframe(props: IDataFrame) {
   const classes = useStyles();
-  const [param1, setParam1] = useState('');
-  const [param2, setParam2] = useState('');
+  const { columns, index, data } = props;
+  const [param, setParam] = useState('');
 
-  function fn2(df: IDataFrame): any[] {
-    const c = df.columns.indexOf(param1);
-    const i = df.index.indexOf(param2);
-    if (c === -1 || i === -1) {
+  const filter = (df: IDataFrame): any[] => {
+    const c = df.columns.indexOf(param);
+    if (c === -1) {
       return [];
     }
-    if (!Array.isArray(df.data[c][i])) {
-      return [df.data[c][i]];
+    const arr: any[] = [];
+    for (const index in df.data) {
+      arr.push(df.data[index][c]);
     }
-    return df.data[c][i];
-  }
+    return arr;
+  };
 
   return (
     <div>
       <FormControl className={classes.formControl}>
-        <InputLabel>Param1</InputLabel>
+        <InputLabel>Param</InputLabel>
         <Select
-          value={param1}
-          onChange={event => setParam1(event.target.value as string)}
+          value={param}
+          onChange={event => setParam(event.target.value as string)}
         >
-          {props.columns.map(name => (
-            <MenuItem key={name} value={name}>
+          {columns.map(name => (
+            <MenuItem key={name} value={name} dense={true}>
               {name}
             </MenuItem>
           ))}
         </Select>
       </FormControl>
-      <FormControl className={classes.formControl}>
-        <InputLabel>Param2</InputLabel>
-        <Select
-          value={param2}
-          onChange={event => setParam2(event.target.value as string)}
-        >
-          {props.index.map(name => (
-            <MenuItem key={name} value={name}>
-              {name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {fn2(props).map((elem, j) => {
-                return <TableCell>#{j}</TableCell>;
-              })}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow key={1}>
-              {fn2(props).map((elem, j) => {
-                return <TableCell>{elem}</TableCell>;
-              })}
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {param !== '' && (
+        <TableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Run</TableCell>
+                {filter({ columns, index, data }).map((elem, i) => {
+                  return <TableCell align="right">#{i}</TableCell>;
+                })}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow key={1}>
+                <TableCell component="th" scope="row">
+                  Value
+                </TableCell>
+                {filter({ columns, index, data }).map((elem, i) => {
+                  return <TableCell align="right">{elem}</TableCell>;
+                })}
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </div>
   );
 }

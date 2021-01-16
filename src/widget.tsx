@@ -31,7 +31,7 @@ function activate(
   restorer: ILayoutRestorer,
   tracker: INotebookTracker
 ): IJupyterPads {
-  const widget = ReactWidget.create(<Sidebar tracker={tracker} />);
+  const widget = ReactWidget.create(<Sidebar {...{ tracker }} />);
   widget.id = 'jupyterpads:widget';
   widget.title.icon = fooIcon;
   widget.title.caption = 'PyPads companion extension for JupyterLab';

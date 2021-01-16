@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import Dataframe from './dataframe';
-// import { requestAPI } from '../api/getSummary';
-import { NotebookActions } from '@jupyterlab/notebook';
+import { INotebookTracker, NotebookActions } from '@jupyterlab/notebook';
 import NotebookUtils from '../utils/NotebookUtils';
-import { INotebookTracker } from '@jupyterlab/notebook';
 import Graph from './graph';
-import { requestAPI } from '../api/getSummary';
-// import axios from 'axios';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { makeStyles } from '@material-ui/core';
 
 interface IProps {
   tracker: INotebookTracker;
+  expId: string;
 }
 
 interface IDataFrame {
@@ -28,32 +27,29 @@ const defaultDataFrame: IDataFrame = {
   data: []
 };
 
+const useStyles = makeStyles(theme => ({
+  root: {
+    width: '100%'
+  },
+  heading: {
+    fontSize: theme.typography.pxToRem(15),
+    fontWeight: theme.typography.fontWeightRegular
+  }
+}));
+
 export default function Ouput(props: IProps) {
+  const classes = useStyles();
+  const { tracker, expId } = props;
+  const [isFirstRun, setIsFirstRun] = useState(true);
   const [df, setDf] = useState(defaultDataFrame);
 
   useEffect(() => {
+    if (!isFirstRun) {
+      update();
+      setIsFirstRun(false);
+    }
     NotebookActions.executed.connect((sender, args) => {
-      const code =
-        "result = tracker.results.get_summary().to_json(orient='split')";
-      const expr = { result: 'result' };
-      NotebookUtils.sendKernelRequestFromNotebook(
-        props.tracker.currentWidget,
-        code,
-        expr
-      ).then((response: any) => {
-        const x = response.result.data['text/plain'].slice(1, -1);
-        const y = JSON.parse(x);
-        setDf(y);
-      });
-      requestAPI<any>('get_example')
-        .then(data => {
-          console.log(data);
-        })
-        .catch(reason => {
-          console.error(
-            `The jupyterpads server extension appears to be missing.\n${reason}`
-          );
-        });
+      update();
     });
     return () => {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -61,12 +57,33 @@ export default function Ouput(props: IProps) {
     };
   }, []);
 
+  const update = () => {
+    const code =
+      'tracker.api.end_run(); result = tracker.results.get_summary(experiment_id=' +
+      expId +
+      ").to_json(orient='split'); tracker.api.start_run(experiment_id=" +
+      expId +
+      ')';
+    NotebookUtils.sendKernelRequestFromNotebook(tracker.currentWidget, code, {
+      result: 'result'
+    })
+      .then((response: any) => {
+        setDf(JSON.parse(response.result.data['text/plain'].slice(1, -1)));
+      })
+      .catch((r: any) => {
+        NotebookUtils.showMessage('Warning', [
+          'Dataframe update failed. See console for more details.'
+        ]);
+        console.log(r);
+      });
+  };
+
   return (
-    <div>
+    <div className={classes.root}>
       <div>
         <Accordion>
-          <AccordionSummary>
-            <Typography>Dataframe</Typography>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography className={classes.heading}>Dataframe</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Dataframe {...df} />
@@ -74,10 +91,9 @@ export default function Ouput(props: IProps) {
         </Accordion>
       </div>
       <div>
-        <Accordion
-        >
-          <AccordionSummary>
-            <Typography>Graph</Typography>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography className={classes.heading}>Graph</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Graph {...df} />

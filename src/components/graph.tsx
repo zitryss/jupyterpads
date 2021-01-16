@@ -3,8 +3,6 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
 import { VegaLite, VisualizationSpec } from 'react-vega';
 import { createStyles, makeStyles, Theme } from '@material-ui/core';
 
@@ -19,17 +17,14 @@ const useStyles = makeStyles((theme: Theme) =>
     formControl: {
       margin: theme.spacing(1),
       minWidth: 120
-    },
-    selectEmpty: {
-      marginTop: theme.spacing(2)
     }
   })
 );
 
 export default function Graph(props: IDataFrame) {
   const classes = useStyles();
-  const [param1, setParam1] = useState('');
-  const [param2, setParam2] = useState('');
+  const { columns, index, data } = props;
+  const [param, setParam] = useState('');
 
   const spec: VisualizationSpec = {
     mark: 'line',
@@ -40,56 +35,40 @@ export default function Graph(props: IDataFrame) {
     data: { name: 'table' }
   };
 
-  function convert(df: IDataFrame) {
+  function filter(df: IDataFrame) {
     const data = {
       table: [] as any
     };
-    const c = df.columns.indexOf(param1); // todo: code duplication
-    const i = df.index.indexOf(param2);
-    if (c === -1 || i === -1) {
+    const c = df.columns.indexOf(param);
+    if (c === -1) {
       return data;
     }
-    if (!Array.isArray(df.data[c][i])) {
-      data.table.push({ x: 0, y: df.data[c][i] });
-      return data;
+    let i = 0;
+    for (const index in df.data) {
+      data.table.push({ x: i, y: df.data[index][c] });
+      i++;
     }
-    df.data[c][i].forEach((elem: any, index: any) => {
-      data.table.push({ x: index, y: elem });
-    });
     return data;
   }
 
   return (
     <div>
       <FormControl className={classes.formControl}>
-        <InputLabel>Param1</InputLabel>
+        <InputLabel>Param</InputLabel>
         <Select
-          value={param1}
-          onChange={event => setParam1(event.target.value as string)}
+          value={param}
+          onChange={event => setParam(event.target.value as string)}
         >
-          {props.columns.map(name => (
-            <MenuItem key={name} value={name}>
+          {columns.map(name => (
+            <MenuItem key={name} value={name} dense={true}>
               {name}
             </MenuItem>
           ))}
         </Select>
       </FormControl>
-      <FormControl className={classes.formControl}>
-        <InputLabel>Param2</InputLabel>
-        <Select
-          value={param2}
-          onChange={event => setParam2(event.target.value as string)}
-        >
-          {props.index.map(name => (
-            <MenuItem key={name} value={name}>
-              {name}
-            </MenuItem>
-          ))}
-        </Select>
-        {param1 !== '' && param2 !== '' && (
-          <VegaLite spec={spec} data={convert(props)} />
-        )}
-      </FormControl>
+      {param !== '' && (
+        <VegaLite spec={spec} data={filter({ columns, index, data })} />
+      )}
     </div>
   );
 }
