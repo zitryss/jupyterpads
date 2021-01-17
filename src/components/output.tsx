@@ -44,7 +44,7 @@ export default function Ouput(props: IProps) {
   const [df, setDf] = useState(defaultDataFrame);
 
   useEffect(() => {
-    if (!isFirstRun) {
+    if (isFirstRun) {
       update();
       setIsFirstRun(false);
     }
