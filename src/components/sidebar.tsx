@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import Switch from '@material-ui/core/Switch';
 import NotebookUtils from '../utils/NotebookUtils';
-import { Box, makeStyles } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import Output from './output';
+import Pipeline from './tabbar';
 import Config from './config';
+import { makeStyles } from '@material-ui/core/styles';
 
 interface IProps {
   tracker: INotebookTracker;
 }
+
+const defaultInitCode = '';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -19,39 +23,24 @@ const useStyles = makeStyles(theme => ({
 export default function Sidebar(props: IProps) {
   const classes = useStyles();
   const { tracker } = props;
-  const [isFirstRun, setIsFirstRun] = useState(true);
   const [isOn, setIsOn] = useState(false);
-  const [expName, setExpName] = useState('');
-  const [initCode, setInitCode] = useState('');
+  const [initCode, setInitCode] = useState(defaultInitCode);
   const [expId, setExpId] = useState('');
 
   useEffect(() => {
     const setUp = async () => {
-      await NotebookUtils.sendKernelRequestFromNotebook(
-        tracker.currentWidget,
-        initCode,
-        {}
-      ).catch((r: any) => {
-        setIsOn(false);
-        NotebookUtils.showMessage('Warning', [
-          'PyPads initialization failed. See console for more details.'
-        ]);
-        console.log(r);
-      });
-      await NotebookUtils.sendKernelRequestFromNotebook(
-        tracker.currentWidget,
-        'tracker.start_track(experiment_name="' +
-          expName +
-          '"); id = tracker.api.active_experiment().experiment_id',
-        { id: 'id' }
-      )
-        .then((response: any) => {
-          setExpId(response.id.data['text/plain']);
+      await NotebookUtils.restartKernel(tracker.currentWidget)
+        .then(() => {
+          return NotebookUtils.sendKernelRequestFromNotebook(
+            tracker.currentWidget,
+            initCode,
+            {}
+          );
         })
         .catch((r: any) => {
           setIsOn(false);
           NotebookUtils.showMessage('Warning', [
-            'Tracker activation failed. See console for more details.'
+            'PyPads initialization failed. See console for more details.'
           ]);
           console.log(r);
         });
@@ -62,37 +51,26 @@ export default function Sidebar(props: IProps) {
         tracker.currentWidget,
         'tracker.api.end_run()',
         {}
-      ).catch((r: any) => {
-        setIsOn(false);
-        NotebookUtils.showMessage('Warning', [
-          'End run failed. See console for more details.'
-        ]);
-        console.log(r);
-      });
-      await NotebookUtils.restartKernel(tracker.currentWidget).catch(
-        (r: any) => {
+      )
+        .then(() => {
+          return NotebookUtils.restartKernel(tracker.currentWidget);
+        })
+        .catch((r: any) => {
           setIsOn(false);
-          NotebookUtils.showMessage('Warning', [
-            'Kernel restart failed. See console for more details.'
-          ]);
           console.log(r);
-        }
-      );
+        });
     };
 
     if (isOn) {
       setUp();
-      setIsFirstRun(false);
     } else {
-      if (!isFirstRun) {
-        tearDown();
-      }
+      tearDown();
     }
   }, [isOn]);
 
   return (
     <div className={'jupyterpads-widget'}>
-      <p>Version 1.2.hellogeneral</p>
+      <p>Version 2.0.24</p>
       <Box textAlign="center">
         Off
         <Switch
@@ -103,10 +81,23 @@ export default function Sidebar(props: IProps) {
         />
         On
       </Box>
-      <div className={classes.root}>
-        <Config {...{ expName, setExpName, initCode, setInitCode }} />
-      </div>
-      {isOn && expId !== '' && <Output {...{ tracker, expId }} />}
+      {isOn === false && (
+        <div className={classes.root}>
+          <Config {...{ initCode, setInitCode }} />
+        </div>
+      )}
+
+      {isOn === true && (
+        <div className={classes.root}>
+          <Pipeline {...{ tracker, setExpId }} />
+        </div>
+      )}
+
+      {isOn === true && expId !== '' && (
+        <div className={classes.root}>
+          <Output {...{ tracker, expId }} />
+        </div>
+      )}
     </div>
   );
 }

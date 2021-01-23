@@ -20,8 +20,10 @@ interface IDataFrame {
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     formControl: {
-      margin: theme.spacing(1),
-      minWidth: 120
+      margin: theme.spacing(1)
+    },
+    table: {
+      width: 10
     }
   })
 );
@@ -60,9 +62,9 @@ export default function Dataframe(props: IDataFrame) {
       </FormControl>
       {param !== '' && (
         <TableContainer component={Paper}>
-          <Table size="small">
+          <Table size="small" aria-label="a dense table">
             <TableHead>
-              <TableRow>
+              <TableRow className={classes.table} key={'1'}>
                 <TableCell>Run</TableCell>
                 {filter({ columns, index, data }).map((elem, i) => {
                   return <TableCell align="right">#{i}</TableCell>;
@@ -70,7 +72,7 @@ export default function Dataframe(props: IDataFrame) {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow key={1}>
+              <TableRow className={classes.table} key={'2'}>
                 <TableCell component="th" scope="row">
                   Value
                 </TableCell>

@@ -40,40 +40,40 @@ const useStyles = makeStyles(theme => ({
 export default function Ouput(props: IProps) {
   const classes = useStyles();
   const { tracker, expId } = props;
-  const [isFirstRun, setIsFirstRun] = useState(true);
   const [df, setDf] = useState(defaultDataFrame);
 
+  const getExpId = () => {
+    return expId;
+  };
+
   useEffect(() => {
-    if (isFirstRun) {
-      update();
-      setIsFirstRun(false);
-    }
-    NotebookActions.executed.connect((sender, args) => {
-      update();
-    });
+    update();
+    NotebookActions.executed.connect(update);
     return () => {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      NotebookActions.executed.connect((sender, args) => {});
+      NotebookActions.executed.disconnect(update);
     };
-  }, []);
+  }, [expId]);
 
-  const update = () => {
+  const update = (): Promise<void> => {
     const code =
       'tracker.api.end_run(); result = tracker.results.get_summary(experiment_id=' +
-      expId +
-      ").to_json(orient='split'); tracker.api.start_run(experiment_id=" +
-      expId +
+      getExpId() +
+      ').to_json(orient="split"); tracker.api.start_run(experiment_id=' +
+      getExpId() +
       ')';
-    NotebookUtils.sendKernelRequestFromNotebook(tracker.currentWidget, code, {
-      result: 'result'
-    })
-      .then((response: any) => {
-        setDf(JSON.parse(response.result.data['text/plain'].slice(1, -1)));
+    return NotebookUtils.sendKernelRequestFromNotebook(
+      tracker.currentWidget,
+      code,
+      {
+        result: 'result'
+      }
+    )
+      .then((r: any) => {
+        console.log('id from update Here is your id -> ' + getExpId());
+        setDf(JSON.parse(r.result.data['text/plain'].slice(1, -1)));
       })
       .catch((r: any) => {
-        NotebookUtils.showMessage('Warning', [
-          'Dataframe update failed. See console for more details.'
-        ]);
         console.log(r);
       });
   };

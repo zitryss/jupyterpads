@@ -67,7 +67,9 @@ export default function Graph(props: IDataFrame) {
         </Select>
       </FormControl>
       {param !== '' && (
-        <VegaLite spec={spec} data={filter({ columns, index, data })} />
+        <div>
+          <VegaLite spec={spec} data={filter({ columns, index, data })} />
+        </div>
       )}
     </div>
   );
