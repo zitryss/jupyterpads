@@ -13,14 +13,11 @@ interface IProps {
 
 export default function Pipeline(props: IProps) {
   const { tracker, setExpId } = props;
-  const [tabs, setAddTab] = React.useState([]);
+  const [tabs, setTabs] = React.useState([]);
   const [tabValue, setTabValue] = React.useState('addTab');
 
   useEffect(() => {
     handleTabAdd();
-    // todo: possibly I would need fallback mechanism
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    return () => {};
   }, []);
 
   const handleTabAdd = async () => {
@@ -49,7 +46,7 @@ export default function Pipeline(props: IProps) {
       .then((r: any) => {
         expId = r.id.data['text/plain'];
         setExpId(expId);
-        setAddTab([...tabs, { label: expName, value: expId }]);
+        setTabs([...tabs, { label: expName, value: expId }]);
         setTabValue(expId);
       })
       .catch((r: any) => {
@@ -74,7 +71,7 @@ export default function Pipeline(props: IProps) {
     const expId = value;
     await NotebookUtils.sendKernelRequestFromNotebook(
       tracker.currentWidget,
-      'tracker.api.start_run(experiment_id=' + expId + ')',
+      'id = ' + expId + '; tracker.api.start_run(experiment_id=id)',
       {}
     )
       .then((r: any) => {
@@ -107,7 +104,7 @@ export default function Pipeline(props: IProps) {
         scrollButtons="on"
       >
         {tabs.map(tab => (
-          <Tab label={tab.label} value={tab.value} />
+          <Tab key={tab.value} label={tab.label} value={tab.value} />
         ))}
         <Tab icon={<PostAdd />} value="addTab" />
       </Tabs>

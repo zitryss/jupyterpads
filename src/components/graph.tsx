@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import { VegaLite, VisualizationSpec } from 'react-vega';
 import { createStyles, makeStyles, Theme } from '@material-ui/core';
+
+interface IProps {
+  df: IDataFrame;
+  paramGraph: string;
+  setParamGraph: any;
+}
 
 interface IDataFrame {
   columns: string[];
@@ -21,10 +27,9 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-export default function Graph(props: IDataFrame) {
+export default function Graph(props: IProps) {
   const classes = useStyles();
-  const { columns, index, data } = props;
-  const [param, setParam] = useState('');
+  const { df, paramGraph, setParamGraph } = props;
 
   const spec: VisualizationSpec = {
     mark: 'line',
@@ -39,7 +44,7 @@ export default function Graph(props: IDataFrame) {
     const data = {
       table: [] as any
     };
-    const c = df.columns.indexOf(param);
+    const c = df.columns.indexOf(paramGraph);
     if (c === -1) {
       return data;
     }
@@ -56,19 +61,19 @@ export default function Graph(props: IDataFrame) {
       <FormControl className={classes.formControl}>
         <InputLabel>Param</InputLabel>
         <Select
-          value={param}
-          onChange={event => setParam(event.target.value as string)}
+          value={paramGraph}
+          onChange={event => setParamGraph(event.target.value as string)}
         >
-          {columns.map(name => (
+          {df.columns.map(name => (
             <MenuItem key={name} value={name} dense={true}>
               {name}
             </MenuItem>
           ))}
         </Select>
       </FormControl>
-      {param !== '' && (
+      {paramGraph !== '' && (
         <div>
-          <VegaLite spec={spec} data={filter({ columns, index, data })} />
+          <VegaLite spec={spec} data={filter(df)} />
         </div>
       )}
     </div>

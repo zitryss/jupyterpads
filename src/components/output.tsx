@@ -41,16 +41,15 @@ export default function Ouput(props: IProps) {
   const classes = useStyles();
   const { tracker, expId } = props;
   const [df, setDf] = useState(defaultDataFrame);
-
-  const getExpId = () => {
-    return expId;
-  };
+  const [paramDataframe, setParamDataframe] = useState('');
+  const [paramGraph, setParamGraph] = useState('');
 
   useEffect(() => {
+    setParamDataframe('');
+    setParamGraph('');
     update();
     NotebookActions.executed.connect(update);
     return () => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       NotebookActions.executed.disconnect(update);
     };
   }, [expId]);
@@ -70,12 +69,15 @@ export default function Ouput(props: IProps) {
       }
     )
       .then((r: any) => {
-        console.log('id from update Here is your id -> ' + getExpId());
         setDf(JSON.parse(r.result.data['text/plain'].slice(1, -1)));
       })
       .catch((r: any) => {
         console.log(r);
       });
+  };
+
+  const getExpId = () => {
+    return expId; // todo: check with and without
   };
 
   return (
@@ -86,7 +88,7 @@ export default function Ouput(props: IProps) {
             <Typography className={classes.heading}>Dataframe</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Dataframe {...df} />
+            <Dataframe {...{ df, paramDataframe, setParamDataframe }} />
           </AccordionDetails>
         </Accordion>
       </div>
@@ -96,7 +98,7 @@ export default function Ouput(props: IProps) {
             <Typography className={classes.heading}>Graph</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Graph {...df} />
+            <Graph {...{ df, paramGraph, setParamGraph }} />
           </AccordionDetails>
         </Accordion>
       </div>
