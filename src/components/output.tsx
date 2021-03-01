@@ -42,11 +42,11 @@ export default function Ouput(props: IProps) {
   const { tracker, expId } = props;
   const [df, setDf] = useState(defaultDataFrame);
   const [paramDataframe, setParamDataframe] = useState('');
-  const [paramGraph, setParamGraph] = useState('');
+  const [chart, setChart] = useState('{}');
 
   useEffect(() => {
     setParamDataframe('');
-    setParamGraph('');
+    setChart('{}');
     update();
     NotebookActions.executed.connect(update);
     return () => {
@@ -70,6 +70,30 @@ export default function Ouput(props: IProps) {
     )
       .then((r: any) => {
         setDf(JSON.parse(r.result.data['text/plain'].slice(1, -1)));
+        const code =
+          'max = 0.0\n' +
+          'chart = "{}"\n' +
+          'for i in tracker.results.list(storage_type="tracked_object", search_dict={"experiment.uid": ' +
+          getExpId() +
+          ', "category": "ROC category"}):\n' +
+          '    if i.created_at > max:\n' +
+          '        max = i.created_at\n' +
+          '        chart = i.chart\n';
+        return NotebookUtils.sendKernelRequestFromNotebook(
+          tracker.currentWidget,
+          code,
+          {
+            chart: 'chart'
+          }
+        );
+      })
+      .then((r: any) => {
+        console.log('id: ', getExpId());
+        console.log(
+          'chart: ',
+          r.chart.data['text/plain'].slice(1, -1).replace(/\\n/g, '')
+        );
+        setChart(r.chart.data['text/plain'].slice(1, -1).replace(/\\n/g, ''));
       })
       .catch((r: any) => {
         console.log(r);
@@ -98,7 +122,7 @@ export default function Ouput(props: IProps) {
             <Typography className={classes.heading}>Graph</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Graph {...{ df, paramGraph, setParamGraph }} />
+            <Graph {...{ chart }} />
           </AccordionDetails>
         </Accordion>
       </div>
