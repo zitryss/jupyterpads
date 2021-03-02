@@ -8,5 +8,5 @@ interface IProps {
 export default function Graph(props: IProps) {
   const { chart } = props;
   const spec: VisualizationSpec = JSON.parse(chart);
-  return <div>{chart !== '' && <VegaLite spec={spec} />}</div>;
+  return <VegaLite spec={spec} />;
 }

@@ -45,6 +45,7 @@ export default function Ouput(props: IProps) {
   const [chart, setChart] = useState('{}');
 
   useEffect(() => {
+    setDf(defaultDataFrame);
     setParamDataframe('');
     setChart('{}');
     update();
@@ -56,29 +57,32 @@ export default function Ouput(props: IProps) {
 
   const update = (): Promise<void> => {
     const code =
-      'tracker.api.end_run(); result = tracker.results.get_summary(experiment_id=' +
+      'tracker.api.end_run()\n' +
+      'df = tracker.results.get_summary(experiment_id="' +
       getExpId() +
-      ').to_json(orient="split"); tracker.api.start_run(experiment_id=' +
+      '").to_json(orient="split")\n' +
+      'tracker.api.start_run(experiment_id="' +
       getExpId() +
-      ')';
+      '")';
     return NotebookUtils.sendKernelRequestFromNotebook(
       tracker.currentWidget,
       code,
       {
-        result: 'result'
+        df: 'df'
       }
     )
       .then((r: any) => {
-        setDf(JSON.parse(r.result.data['text/plain'].slice(1, -1)));
+        const df = JSON.parse(r.df.data['text/plain'].slice(1, -1));
+        setDf(df);
         const code =
           'max = 0.0\n' +
           'chart = "{}"\n' +
-          'for i in tracker.results.list(storage_type="tracked_object", search_dict={"experiment.uid": ' +
+          'for i in tracker.results.list(storage_type="tracked_object", search_dict={"experiment.uid": "' +
           getExpId() +
-          ', "category": "ROC category"}):\n' +
+          '", "category": "ROC category"}):\n' +
           '    if i.created_at > max:\n' +
           '        max = i.created_at\n' +
-          '        chart = i.chart\n';
+          '        chart = i.chart';
         return NotebookUtils.sendKernelRequestFromNotebook(
           tracker.currentWidget,
           code,
@@ -88,12 +92,10 @@ export default function Ouput(props: IProps) {
         );
       })
       .then((r: any) => {
-        console.log('id: ', getExpId());
-        console.log(
-          'chart: ',
-          r.chart.data['text/plain'].slice(1, -1).replace(/\\n/g, '')
-        );
-        setChart(r.chart.data['text/plain'].slice(1, -1).replace(/\\n/g, ''));
+        const chart = r.chart.data['text/plain']
+          .slice(1, -1)
+          .replace(/\\n/g, '');
+        setChart(chart);
       })
       .catch((r: any) => {
         console.log(r);
@@ -116,16 +118,18 @@ export default function Ouput(props: IProps) {
           </AccordionDetails>
         </Accordion>
       </div>
-      <div>
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography className={classes.heading}>Graph</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Graph {...{ chart }} />
-          </AccordionDetails>
-        </Accordion>
-      </div>
+      {chart !== '{}' && (
+        <div>
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>Graph</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Graph {...{ chart }} />
+            </AccordionDetails>
+          </Accordion>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tab, Tabs } from '@material-ui/core';
 import AppBar from '@material-ui/core/AppBar';
 import { PostAdd } from '@material-ui/icons';
@@ -13,38 +13,44 @@ interface IProps {
 
 export default function Pipeline(props: IProps) {
   const { tracker, setExpId } = props;
-  const [tabs, setTabs] = React.useState([]);
-  const [tabValue, setTabValue] = React.useState('addTab');
+  const [tabs, setTabs] = useState([]);
+  const [tabValue, setTabValue] = useState('addTab');
+  const [isFirstRun, setIsFirstRun] = useState(true);
 
   useEffect(() => {
     handleTabAdd();
   }, []);
 
   const handleTabAdd = async () => {
-    await NotebookUtils.sendKernelRequestFromNotebook(
-      tracker.currentWidget,
-      'tracker.api.end_run()',
-      {}
-    ).catch((r: any) => {
-      setExpId('');
-      console.log(r);
-    });
-
+    if (!isFirstRun) {
+      const code = 'tracker.api.end_run()';
+      await NotebookUtils.sendKernelRequestFromNotebook(
+        tracker.currentWidget,
+        code,
+        {}
+      ).catch((r: any) => {
+        setExpId('');
+        console.log(r);
+      });
+    }
     let expName = '';
     let expId = '';
     await InputDialog.getText({ title: 'Experiment Name' })
       .then((r: any) => {
         expName = r.value;
+        const code =
+          'tracker.start_track(experiment_name="' +
+          expName +
+          '")\n' +
+          'id = tracker.api.active_experiment().experiment_id';
         return NotebookUtils.sendKernelRequestFromNotebook(
           tracker.currentWidget,
-          'tracker.start_track(experiment_name="' +
-            expName +
-            '"); id = tracker.api.active_experiment().experiment_id',
+          code,
           { id: 'id' }
         );
       })
       .then((r: any) => {
-        expId = r.id.data['text/plain'];
+        expId = r.id.data['text/plain'].slice(1, -1);
         setExpId(expId);
         setTabs([...tabs, { label: expName, value: expId }]);
         setTabValue(expId);
@@ -56,12 +62,14 @@ export default function Pipeline(props: IProps) {
         ]);
         console.log(r);
       });
+    setIsFirstRun(false);
   };
 
   const handleTabSwitch = async value => {
+    let code = 'tracker.api.end_run()';
     await NotebookUtils.sendKernelRequestFromNotebook(
       tracker.currentWidget,
-      'tracker.api.end_run()',
+      code,
       {}
     ).catch((r: any) => {
       setExpId('');
@@ -69,9 +77,10 @@ export default function Pipeline(props: IProps) {
     });
 
     const expId = value;
+    code = 'tracker.api.start_run(experiment_id="' + expId + '")';
     await NotebookUtils.sendKernelRequestFromNotebook(
       tracker.currentWidget,
-      'id = ' + expId + '; tracker.api.start_run(experiment_id=id)',
+      code,
       {}
     )
       .then((r: any) => {

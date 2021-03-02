@@ -12,7 +12,21 @@ interface IProps {
   tracker: INotebookTracker;
 }
 
-const defaultInitCode = ``;
+const defaultInitCode = `import os
+os.environ["AWS_ACCESS_KEY_ID"]="XSHDLTACETFLQURZSAUJ"
+os.environ["AWS_SECRET_ACCESS_KEY"]="ISvyN9Aay40ZIaMuQcngOCJdzkSqR85ON1ng9PNZ"
+os.environ["MLFLOW_S3_ENDPOINT_URL"]="http://ilz.dimis.fim.uni-passau.de:42415"
+os.environ["MLFLOW_TRACKING_URI"]="http://ilz.dimis.fim.uni-passau.de:34025"
+os.environ["MONGO_DB"]="pypads"
+os.environ["MONGO_USER"]="pypads"
+os.environ["MONGO_URL"]="mongodb://ilz.dimis.fim.uni-passau.de:29642"
+os.environ["MONGO_PW"]="8CN7OqknwhYr3RO"
+os.environ["SPARQL_QUERY_ENDPOINT"]="http://ilz.dimis.fim.uni-passau.de:14182/pypads/query"
+os.environ["SPARQL_UPDATE_ENDPOINT"]="http://ilz.dimis.fim.uni-passau.de:14182/pypads/update"
+os.environ["SPARQL_AUTH_NAME"]="admin"
+os.environ["SPARQL_AUTH_PASSWORD"]="7gaUOSf0jNWlxre"
+from pypads.app.base import PyPads
+tracker = PyPads(uri=os.environ["MLFLOW_TRACKING_URI"])`;
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -48,9 +62,10 @@ export default function Sidebar(props: IProps) {
     };
 
     const tearDown = async () => {
+      const code = 'tracker.api.end_run()';
       await NotebookUtils.sendKernelRequestFromNotebook(
         tracker.currentWidget,
-        'tracker.api.end_run()',
+        code,
         {}
       ).catch((r: any) => {
         setIsOn(false);
@@ -76,7 +91,7 @@ export default function Sidebar(props: IProps) {
 
   return (
     <div className={'jupyterpads-widget'}>
-      <p>Version 2.0.79</p>
+      <p>Version 2.0.80</p>
       <Box textAlign="center">
         Off
         <Switch
