@@ -91,7 +91,7 @@ export default function Sidebar(props: IProps) {
 
   return (
     <div className={'jupyterpads-widget'}>
-      <p>Version 2.0.80</p>
+      <p>Version 2.0.84</p>
       <Box textAlign="center">
         Off
         <Switch

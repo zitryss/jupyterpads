@@ -59,10 +59,10 @@ export default function Ouput(props: IProps) {
     const code =
       'tracker.api.end_run()\n' +
       'df = tracker.results.get_summary(experiment_id="' +
-      getExpId() +
+      expId +
       '").to_json(orient="split")\n' +
       'tracker.api.start_run(experiment_id="' +
-      getExpId() +
+      expId +
       '")';
     return NotebookUtils.sendKernelRequestFromNotebook(
       tracker.currentWidget,
@@ -78,7 +78,7 @@ export default function Ouput(props: IProps) {
           'max = 0.0\n' +
           'chart = "{}"\n' +
           'for i in tracker.results.list(storage_type="tracked_object", search_dict={"experiment.uid": "' +
-          getExpId() +
+          expId +
           '", "category": "ROC category"}):\n' +
           '    if i.created_at > max:\n' +
           '        max = i.created_at\n' +
@@ -100,10 +100,6 @@ export default function Ouput(props: IProps) {
       .catch((r: any) => {
         console.log(r);
       });
-  };
-
-  const getExpId = () => {
-    return expId; // todo: check with and without
   };
 
   return (
