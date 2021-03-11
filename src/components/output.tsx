@@ -42,12 +42,12 @@ export default function Ouput(props: IProps) {
   const { tracker, expId } = props;
   const [df, setDf] = useState(defaultDataFrame);
   const [paramDataframe, setParamDataframe] = useState('');
-  const [chart, setChart] = useState('{}');
+  const [charts, setCharts] = useState([]);
 
   useEffect(() => {
     setDf(defaultDataFrame);
     setParamDataframe('');
-    setChart('{}');
+    setCharts([]);
     update();
     NotebookActions.executed.connect(update);
     return () => {
@@ -75,27 +75,26 @@ export default function Ouput(props: IProps) {
         const df = JSON.parse(r.df.data['text/plain'].slice(1, -1));
         setDf(df);
         const code =
-          'max = 0.0\n' +
-          'chart = "{}"\n' +
+          'import json\n' +
+          'charts = []\n' +
           'for i in tracker.results.list(storage_type="tracked_object", search_dict={"experiment.uid": "' +
           expId +
           '", "category": "ROC category"}):\n' +
-          '    if i.created_at > max:\n' +
-          '        max = i.created_at\n' +
-          '        chart = i.chart';
+          '    charts.append(json.loads(i.chart))\n' +
+          'charts = json.dumps(charts)\n';
         return NotebookUtils.sendKernelRequestFromNotebook(
           tracker.currentWidget,
           code,
           {
-            chart: 'chart'
+            charts: 'charts'
           }
         );
       })
       .then((r: any) => {
-        const chart = r.chart.data['text/plain']
-          .slice(1, -1)
-          .replace(/\\n/g, '');
-        setChart(chart);
+        const a = r.charts.data['text/plain'];
+        const b = a.slice(1, -1);
+        const c = JSON.parse(b);
+        setCharts(c);
       })
       .catch((r: any) => {
         console.log(r);
@@ -114,14 +113,14 @@ export default function Ouput(props: IProps) {
           </AccordionDetails>
         </Accordion>
       </div>
-      {chart !== '{}' && (
+      {charts.length > 0 && (
         <div>
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography className={classes.heading}>Graph</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Graph {...{ chart }} />
+              <Graph {...{ charts: charts }} />
             </AccordionDetails>
           </Accordion>
         </div>
