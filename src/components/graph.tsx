@@ -34,7 +34,7 @@ export default function Graph(props: IProps) {
   useEffect(() => {
     setParamSplit(charts[0].split_id);
     setSpec(charts[0].specs[0]);
-  }, []);
+  }, [charts]);
 
   const filter = (charts: IChart[]): IChart => {
     const c = charts

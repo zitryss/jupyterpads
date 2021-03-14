@@ -60,7 +60,11 @@ export default function Ouput(props: IProps) {
       'tracker.api.end_run()\n' +
       'df = tracker.results.get_summary(experiment_id="' +
       expId +
-      '").to_json(orient="split")\n' +
+      '")\n' +
+      'if df.empty:\n' +
+      '    df = df.to_json(orient="split")\n' +
+      'else:\n' +
+      '    df = df.sort_values(by=["created_at"]).to_json(orient="split")\n' +
       'tracker.api.start_run(experiment_id="' +
       expId +
       '")';
