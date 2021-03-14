@@ -75,12 +75,34 @@ export default function Ouput(props: IProps) {
         const df = JSON.parse(r.df.data['text/plain'].slice(1, -1));
         setDf(df);
         const code =
-          'import json\n' +
-          'charts = []\n' +
-          'for i in tracker.results.list(storage_type="tracked_object", search_dict={"experiment.uid": "' +
+          'id = "' +
           expId +
-          '", "category": "ROC category"}):\n' +
-          '    charts.append(json.loads(i.chart))\n' +
+          '"\n' +
+          'data = []\n' +
+          'run_ids = tracker.results.list_run_infos(experiment_id=id)\n' +
+          'run_ids.sort(key=lambda r: r.start_time, reverse=True)\n' +
+          'for r in run_ids:\n' +
+          '    found = False\n' +
+          '    for i in tracker.results.list(storage_type="tracked_object", search_dict={"experiment.uid": id, "run.uid": r.run_id, "category": "ROC category"}):\n' +
+          '        data.append({"split_id": i.split_id, "spec": json.loads(i.chart)})\n' +
+          '        found = True\n' +
+          '    if found:\n' +
+          '        break\n' +
+          '\n' +
+          'split_ids = set()\n' +
+          'for d in data:\n' +
+          '    split_ids.add(d["split_id"])\n' +
+          '\n' +
+          'charts = []\n' +
+          'for s in split_ids:\n' +
+          '    specs = []\n' +
+          '    for d in data:\n' +
+          '        if d["split_id"] == s:\n' +
+          '            specs.append(d["spec"])\n' +
+          '    charts.append({"split_id": s, "specs": specs})\n' +
+          'charts.sort(key=lambda o: len(o["specs"]), reverse=True)\n' +
+          '\n' +
+          'import json\n' +
           'charts = json.dumps(charts)\n';
         return NotebookUtils.sendKernelRequestFromNotebook(
           tracker.currentWidget,
