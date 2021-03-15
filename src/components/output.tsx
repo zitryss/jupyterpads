@@ -79,6 +79,7 @@ export default function Ouput(props: IProps) {
         const df = JSON.parse(r.df.data['text/plain'].slice(1, -1));
         setDf(df);
         const code =
+          'import json\n' +
           'id = "' +
           expId +
           '"\n' +
@@ -106,7 +107,6 @@ export default function Ouput(props: IProps) {
           '    charts.append({"split_id": s, "specs": specs})\n' +
           'charts.sort(key=lambda o: len(o["specs"]), reverse=True)\n' +
           '\n' +
-          'import json\n' +
           'charts = json.dumps(charts)\n';
         return NotebookUtils.sendKernelRequestFromNotebook(
           tracker.currentWidget,
