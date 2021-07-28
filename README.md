@@ -1,8 +1,11 @@
-# jupyterpads
+# JupyterPads
 
-![Github Actions Status](https://github.com/zitryss/jupyterpads/workflows/Build/badge.svg)
+JupyterPads is an extension for the Jupyter Notebook which helps to integrate machine learning pipeline into interactive computing.
 
-PyPads companion extension for JupyterLab
+Because the data science process is research-oriented, it is usual to have multiple experiments running simultaneously, with many of them never making it to production. This requires a method that keeps track of all the different experiments and hyperparameters that have been attempted. Your data science process will need to support tracking, comparing results from different runs, visualizing, as well as support for moving models that prove to be valid to the next stage of the life cycle. Experiment management in the machine learning field can be a very time-consuming activity for developers. The project’s goal was to create an extension for an interactive notebook that will take care of all the overhead associated with the experiment management and potentially improve human-computer interaction.
+
+![1](https://user-images.githubusercontent.com/2380748/127292347-e74434e3-89d2-4ff1-89ad-e3d476545406.png)
+![2](https://user-images.githubusercontent.com/2380748/127292402-4abdf680-26fd-4b72-a1c4-d648b25a8025.png)
 
 
 This extension is composed of a Python package named `jupyterpads`
